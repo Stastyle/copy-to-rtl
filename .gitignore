@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Logs / runtime artifacts
+*.log
+terminals/
+
+# External tooling dumps (not part of the app)
+mcps/
+
+# Electron user data lives in %AppData%/copy-to-rtl, not in-tree

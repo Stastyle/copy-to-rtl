@@ -1,0 +1,14 @@
+{
+  "name": "copy-to-rtl",
+  "version": "1.0.0",
+  "description": "Clipboard monitor that displays copied text in RTL for Hebrew readability",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File stop.ps1",
+    "restart": "npm run stop && npm start"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0"
+  }
+}

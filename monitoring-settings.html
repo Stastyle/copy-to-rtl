@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select Monitoring</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="settings-body">
+  <header class="settings-header">
+    <h1>Select Monitoring</h1>
+    <p>Only copies from checked apps will appear in Copy to RTL.</p>
+  </header>
+
+  <section class="settings-section">
+    <h2>Apps</h2>
+    <div id="appsList" class="apps-list"></div>
+  </section>
+
+  <section class="settings-section">
+    <h2>Add custom app</h2>
+    <div class="custom-form">
+      <input type="text" id="customName" placeholder="App name" maxlength="40">
+      <input type="text" id="customKeyword" placeholder="Window title keyword" maxlength="60">
+      <button class="btn-text" id="addCustomBtn">Add</button>
+    </div>
+    <p class="settings-hint">The keyword is matched against the active window title when you copy.</p>
+  </section>
+
+  <footer class="settings-footer">
+    <button class="btn-text" id="cancelBtn">Cancel</button>
+    <button class="btn-text active" id="saveBtn">Save</button>
+  </footer>
+
+  <script src="monitoring-settings.js"></script>
+</body>
+</html>

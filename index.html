@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copy to RTL</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-start">
+      <button class="title-toggle" id="titleToggle" title="Click to pause/resume monitoring">
+        <span class="app-title">Copy to RTL</span>
+        <span class="status-dot" id="statusDot" title="Monitoring clipboard"></span>
+      </button>
+    </div>
+    <div class="toolbar-end">
+      <button class="btn-text" id="selectMonitoringBtn" title="Choose which apps to monitor">Select Monitoring</button>
+      <label class="toggle" title="Keep window above other apps">
+        <input type="checkbox" id="alwaysOnTop" checked>
+        <span>Always on top</span>
+      </label>
+      <button class="btn-icon" id="copyBtn" title="Copy displayed text">📋</button>
+      <button class="btn-text active" id="styleBtn" title="Toggle styled markdown view">Style</button>
+      <button class="btn-icon" id="themeBtn" title="Toggle dark/light mode">🌙</button>
+      <div class="help-wrap">
+        <button class="btn-text" id="helpBtn" title="Help">Help</button>
+        <div id="helpPanel" class="help-panel" hidden>
+          <p><strong>Copy to RTL</strong> — shows copied text from selected apps in RTL.</p>
+          <p>Click the title to pause or resume monitoring. Green dot = active, red dot = paused.</p>
+          <p class="help-section">Style mode supports:</p>
+          <ul>
+            <li><code>*bold*</code> or <code>**bold**</code></li>
+            <li><code>_italic_</code></li>
+            <li><code># Header</code>, <code>## Header</code></li>
+            <li><code>`code`</code></li>
+            <li><code>- list item</code></li>
+            <li><code>| col | col |</code> tables with <code>| --- |</code></li>
+          </ul>
+          <p class="help-section">Select Monitoring:</p>
+          <p>Choose which apps trigger the viewer (Claude, Gemini, ChatGPT, or custom window-title keywords).</p>
+        </div>
+      </div>
+      <button class="btn-text" id="clearBtn" title="Clear">Clear</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <p id="welcomeHint" class="welcome-hint">העתק טקסט — יוצג כאן ב-RTL</p>
+    <div id="textDisplay" class="text-display styled"></div>
+  </main>
+
+  <footer class="footer">
+    <span id="charCount">0 תווים</span>
+    <span id="sourceBadge" class="source-badge hidden" title=""></span>
+    <span id="timestamp"></span>
+  </footer>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
