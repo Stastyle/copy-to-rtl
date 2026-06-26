@@ -6,8 +6,10 @@ const {
   Tray,
   Menu,
   nativeImage,
+  screen,
 } = require('electron');
 const { execFile } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const {
@@ -29,13 +31,79 @@ let tray = null;
 let lastClipboardText = '';
 let monitoring = true;
 let pollTimer = null;
+let saveStateTimer = null;
 
 const POLL_INTERVAL_MS = 200;
 
+function getWindowStatePath() {
+  return path.join(app.getPath('userData'), 'window-state.json');
+}
+
+// Default size: 30% of the screen width, 70% of the height.
+function defaultWindowSize() {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  return {
+    width: Math.round(width * 0.3),
+    height: Math.round(height * 0.7),
+  };
+}
+
+function isOnSomeDisplay(bounds) {
+  return screen.getAllDisplays().some((display) => {
+    const wa = display.workArea;
+    return (
+      bounds.x < wa.x + wa.width &&
+      bounds.x + bounds.width > wa.x &&
+      bounds.y < wa.y + wa.height &&
+      bounds.y + bounds.height > wa.y
+    );
+  });
+}
+
+// Returns the last saved bounds if valid, otherwise null.
+function loadWindowState() {
+  try {
+    const saved = JSON.parse(fs.readFileSync(getWindowStatePath(), 'utf8'));
+    if (
+      Number.isFinite(saved.width) &&
+      Number.isFinite(saved.height) &&
+      saved.width >= 320 &&
+      saved.height >= 200
+    ) {
+      return saved;
+    }
+  } catch {
+    /* no saved state yet */
+  }
+  return null;
+}
+
+function persistWindowState() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  try {
+    // getNormalBounds() gives the restored size even while min/maximized.
+    fs.writeFileSync(
+      getWindowStatePath(),
+      JSON.stringify(mainWindow.getNormalBounds()),
+      'utf8'
+    );
+  } catch {
+    /* best effort */
+  }
+}
+
+function scheduleWindowStateSave() {
+  clearTimeout(saveStateTimer);
+  saveStateTimer = setTimeout(persistWindowState, 400);
+}
+
 function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 480,
-    height: 360,
+  const saved = loadWindowState();
+  const size = saved || defaultWindowSize();
+
+  const options = {
+    width: size.width,
+    height: size.height,
     minWidth: 320,
     minHeight: 200,
     alwaysOnTop: true,
@@ -47,7 +115,15 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
-  });
+  };
+
+  // Restore the previous position only if it's still on a connected display.
+  if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y) && isOnSomeDisplay(saved)) {
+    options.x = saved.x;
+    options.y = saved.y;
+  }
+
+  mainWindow = new BrowserWindow(options);
 
   mainWindow.loadFile('index.html');
 
@@ -55,12 +131,10 @@ function createWindow() {
     mainWindow.setAlwaysOnTop(true, 'screen-saver');
   });
 
-  mainWindow.on('close', (event) => {
-    if (!app.isQuitting) {
-      event.preventDefault();
-      mainWindow.hide();
-    }
-  });
+  // Remember the last size/position across launches.
+  mainWindow.on('resize', scheduleWindowStateSave);
+  mainWindow.on('move', scheduleWindowStateSave);
+  mainWindow.on('close', persistWindowState);
 }
 
 function openMonitoringSettings() {
@@ -160,10 +234,7 @@ function rebuildTrayMenu() {
     { type: 'separator' },
     {
       label: 'Quit',
-      click: () => {
-        app.isQuitting = true;
-        app.quit();
-      },
+      click: () => app.quit(),
     },
   ]);
 
@@ -278,17 +349,34 @@ ipcMain.handle('copy-to-clipboard', (_event, text) => {
   lastClipboardText = text;
 });
 
-app.whenReady().then(() => {
-  Menu.setApplicationMenu(null);
-  loadMonitoredApps();
-  createWindow();
-  createTray();
-  startPolling();
-});
+// Single-instance lock: a second launch focuses the existing window and exits,
+// so there's never more than one tray icon / clipboard poller / window.
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+
+if (!gotSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+
+  app.whenReady().then(() => {
+    Menu.setApplicationMenu(null);
+    loadMonitoredApps();
+    createWindow();
+    createTray();
+    startPolling();
+  });
+}
 
 app.on('before-quit', () => {
-  app.isQuitting = true;
+  persistWindowState();
   stopPolling();
+  clearTimeout(saveStateTimer);
 });
 
 app.on('window-all-closed', () => {
@@ -300,7 +388,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
-  } else {
+  } else if (mainWindow) {
     mainWindow.show();
   }
 });
