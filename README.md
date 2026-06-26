@@ -1,99 +1,108 @@
 # Copy to RTL
 
-A lightweight Windows clipboard monitor that shows copied text **right-to-left**, so
-mixed Hebrew/English content pasted from LTR apps (Claude, ChatGPT, Gemini, …) is
-readable. Optionally renders common Markdown as styled HTML.
+I read a lot of Hebrew in Claude, and the desktop app — like most chat apps built
+with English in mind — lays text out left-to-right. Mixed Hebrew/English answers
+end up scrambled: punctuation lands on the wrong side, lines read backwards, and you
+burn more energy untangling the direction than actually reading the answer.
 
-> Built with [Electron](https://www.electronjs.org/). Windows only — it reads the
-> active window title via PowerShell to decide whether a copy came from a monitored app.
+The obvious fix is to "just make Claude render right-to-left" — inject some CSS, patch
+the Electron bundle, run a userscript in devtools. I didn't want to go anywhere near
+that:
 
-## Features
+- I'm not cracking open Anthropic's app. I'd rather not poke at its internals, risk
+  voiding support, or step on its terms of use.
+- Claude updates constantly, and every update would wipe the patch. I'm not signing up
+  to re-apply a hack forever.
+- One bad injection and I've broken the app I actually depend on.
 
-- **RTL viewer** — copied text is displayed right-to-left with proper Hebrew layout.
-- **Markdown styling** — toggle between raw text and a styled view supporting
-  `**bold**` / `*bold*`, `_italic_`, `` `code` ``, `~~strikethrough~~`, `#`/`##`/`###`
-  headers, `-` lists, and `| pipe | tables |`.
-- **App filtering** — only copies made while a *monitored* app is in focus open the
-  viewer. Claude is enabled by default; Gemini, ChatGPT, Copilot, and Grok are built in
-  and toggleable, and you can add custom apps by window-title keyword.
-- **Always on top**, light/dark theme, one-click copy, and a clipboard pause toggle.
-- **Single instance** — launching again focuses the existing window instead of opening
-  a second one.
-- **Remembers its window size and position** between launches (default size is 30% of
-  your screen width × 70% of its height).
-- **System tray** — quick access to Show Window, Select Monitoring, Enable Monitoring,
-  and Quit.
+So **Copy to RTL never touches Claude at all.** It's a small, separate window that just
+watches your clipboard. Select an answer in Claude, hit `Ctrl+C`, and it shows up here
+laid out properly right-to-left. Nothing injected, nothing patched, nothing to redo
+after the next update — and no way for it to break Claude itself.
 
-## Requirements
+It isn't Claude-only, either. ChatGPT, Gemini, Copilot, and Grok work the same way out
+of the box, and you can add any other app by a keyword from its window title.
 
-- Windows 10/11
-- [Node.js](https://nodejs.org/) 18+ and npm (for development / building)
+> Windows only. It figures out where a copy came from by reading the active window's
+> title through a tiny PowerShell call — that's the one OS-specific bit.
 
-## Run from source
+## What it does
+
+- Shows whatever you copy **right-to-left**, with proper Hebrew layout.
+- Optionally styles common Markdown — `**bold**`/`*bold*`, `_italic_`, `` `code` ``,
+  `~~strikethrough~~`, `#`/`##`/`###` headings, `-` lists, and `| pipe | tables |` —
+  or shows the raw text if you'd rather. Toggle it with the **Style** button.
+- Only reacts to copies from apps you've opted into. Claude is on by default; the
+  others are a checkbox away under **Select Monitoring**, and custom apps are matched
+  by a window-title keyword you provide.
+- Stays out of the way: always-on-top, light/dark themes, one-click copy of what's
+  shown, and a pause toggle for when you don't want it watching.
+- Opens at 30% of your screen width × 70% of its height and remembers wherever you
+  drag or resize it to next time.
+- Only ever runs one copy of itself, and closing the window quits it for real — no
+  stray process left running in the background.
+
+## Getting it running
+
+You'll need [Node.js](https://nodejs.org/) 18+ on Windows 10/11.
 
 ```bash
 npm install
 npm start
 ```
 
-To stop any running instances:
+If something gets stuck, `npm run stop` kills any running instances.
 
-```bash
-npm run stop
-```
-
-## Build a Windows executable
+## Building a standalone .exe
 
 ```bash
 npm run package
 ```
 
-This produces an unpacked build at `release/copy-to-rtl-win32-x64/`. Run it via
-`copy-to-rtl.exe` — to move or share it, copy the **whole folder** (it bundles the
-Electron runtime). See [build.mjs](build.mjs) for the packaging config.
+That drops an unpacked build in `release/copy-to-rtl-win32-x64/`. Launch it with
+`copy-to-rtl.exe`. To move or share it, copy the **whole folder** — it carries the
+Electron runtime with it. The packaging setup lives in [build.mjs](build.mjs).
 
-## Usage
+## Using it day to day
 
-1. Launch the app. The RTL viewer window opens and starts watching the clipboard.
-2. Copy text in a monitored app (Claude by default). The viewer shows it right-to-left.
-3. Toolbar controls:
-   - **Select Monitoring** — choose which apps trigger the viewer, or add your own by
-     window-title keyword.
-   - **Always on top** — keep the window above other apps.
-   - **📋** — copy the displayed text back to the clipboard.
-   - **Style** — toggle Markdown styling on/off.
-   - **🌙 / ☀️** — toggle dark/light theme.
-   - **Clear** — empty the viewer.
-   - Click the **title** (or the tray "Enable Monitoring" item) to pause/resume
-     clipboard monitoring. A green dot means active, red means paused.
-4. Closing the window quits the app completely.
+Launch it, then copy text in a monitored app (Claude, unless you've changed things).
+The window pops up with your text the right way round. The toolbar has the rest:
 
-## How monitoring works
+- **Select Monitoring** — pick which apps trigger it, or add your own by keyword.
+- **Always on top** — keep it floating above everything else.
+- **📋** — copy the displayed text back to the clipboard.
+- **Style** — switch between styled Markdown and raw text.
+- **🌙 / ☀️** — dark or light.
+- **Clear** — wipe the view.
 
-Every 200 ms the app checks the clipboard. When the text changes, it reads the
-foreground window title and matches it (case-insensitively) against the keyword list of
-each **enabled** app. If a keyword matches, the copy is shown; otherwise it's ignored.
+Click the title (or the tray's **Enable Monitoring** item) to pause and resume. The
+dot next to it is green when it's watching, red when it's paused.
 
-## Data & settings
+## How it decides what to show
 
-User settings live outside the app folder, under `%AppData%\copy-to-rtl\`:
+Roughly five times a second it checks whether the clipboard changed. When it has, it
+reads the foreground window's title and compares it (case-insensitively) against the
+keywords of each enabled app. Match found → it shows the text; no match → it ignores
+it. That's the whole trick — it never touches the other app, it just notices what's in
+front when you copy.
 
-- `monitored-apps.json` — your monitored-app list and toggles.
-- `window-state.json` — last window size/position.
+## Where your settings live
 
-## Project structure
+Everything's kept out of the app folder, under `%AppData%\copy-to-rtl\`:
 
-| File | Purpose |
-| --- | --- |
-| `main.js` | Electron main process — window, tray, clipboard polling, lifecycle. |
-| `preload.js` / `monitoring-preload.js` | Context-isolated IPC bridges. |
-| `renderer.js` | Viewer UI logic and the Markdown renderer. |
-| `index.html` / `styles.css` | Viewer window markup and styling. |
-| `apps-store.js` | Monitored-app storage and matching. |
-| `monitoring-settings.*` | "Select Monitoring" settings window. |
-| `foreground-title.ps1` | Reads the active window title (Win32 via PowerShell). |
-| `build.mjs` | Packages the Windows executable. |
+- `monitored-apps.json` — your app list and toggles.
+- `window-state.json` — the last window size and position.
+
+## Project layout
+
+The interesting files: [`main.js`](main.js) is the Electron main process (window, tray,
+clipboard polling, lifecycle); [`renderer.js`](renderer.js) is the viewer UI and the
+Markdown renderer; [`apps-store.js`](apps-store.js) handles the monitored-app list and
+matching; [`foreground-title.ps1`](foreground-title.ps1) reads the active window title;
+and [`build.mjs`](build.mjs) packages the executable. The `monitoring-settings.*` files
+are the "Select Monitoring" window, and the `*preload.js` files are the
+context-isolated IPC bridges.
 
 ## License
 
-[MIT](LICENSE) © Stas Meirovich
+MIT — see [LICENSE](LICENSE). © Stas Meirovich
