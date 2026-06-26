@@ -6,9 +6,11 @@
   "scripts": {
     "start": "electron .",
     "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File stop.ps1",
-    "restart": "npm run stop && npm start"
+    "restart": "npm run stop && npm start",
+    "package": "node build.mjs"
   },
   "devDependencies": {
+    "@electron/packager": "^20.0.1",
     "electron": "^35.0.0"
   }
 }
