@@ -2,6 +2,23 @@
   "name": "copy-to-rtl",
   "version": "1.0.0",
   "description": "Clipboard monitor that displays copied text in RTL for Hebrew readability",
+  "keywords": [
+    "rtl",
+    "hebrew",
+    "clipboard",
+    "electron",
+    "markdown"
+  ],
+  "homepage": "https://github.com/Stastyle/copy-to-rtl#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Stastyle/copy-to-rtl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Stastyle/copy-to-rtl/issues"
+  },
+  "author": "Stas Meirovich",
+  "license": "MIT",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
