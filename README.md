@@ -1,6 +1,6 @@
 # Copy to RTL
 
-I read a lot of Hebrew in Claude, and the desktop app — like most chat apps built
+I use a lot of Hebrew in Claude, and the desktop app — like most chat apps built
 with English in mind — lays text out left-to-right. Mixed Hebrew/English answers
 end up scrambled: punctuation lands on the wrong side, lines read backwards, and you
 burn more energy untangling the direction than actually reading the answer.
@@ -27,6 +27,8 @@ of the box, and you can add any other app by a keyword from its window title.
 > title through a tiny PowerShell call — that's the one OS-specific bit.
 
 ## What it does
+
+<img width="1914" height="1032" alt="image" src="https://github.com/user-attachments/assets/3df83e0e-62fa-4f84-bc24-75e6ff3bbd5d" />
 
 - Shows whatever you copy **right-to-left**, with proper Hebrew layout.
 - Optionally styles common Markdown — `**bold**`/`*bold*`, `_italic_`, `` `code` ``,
