@@ -13,4 +13,5 @@ contextBridge.exposeInMainWorld('rtlApp', {
   openMonitoringSettings: () => ipcRenderer.invoke('open-monitoring-settings'),
   setAlwaysOnTop: (value) => ipcRenderer.invoke('set-always-on-top', value),
   copyToClipboard: (text) => ipcRenderer.invoke('copy-to-clipboard', text),
+  snapLayout: () => ipcRenderer.invoke('snap-layout'),
 });

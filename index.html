@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Copy to RTL</title>
+  <link rel="stylesheet" href="vendor/katex/katex.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -20,6 +21,7 @@
         <input type="checkbox" id="alwaysOnTop" checked>
         <span>Always on top</span>
       </label>
+      <button class="btn-icon" id="snapBtn" title="Snap: this app to the right third, Claude to the left">⊞</button>
       <button class="btn-icon" id="copyBtn" title="Copy displayed text">📋</button>
       <button class="btn-text active" id="styleBtn" title="Toggle styled markdown view">Style</button>
       <button class="btn-icon" id="themeBtn" title="Toggle dark/light mode">🌙</button>
@@ -36,7 +38,10 @@
             <li><code>`code`</code></li>
             <li><code>- list item</code></li>
             <li><code>| col | col |</code> tables with <code>| --- |</code></li>
+            <li>math: <code>$x^2$</code>, <code>$$...$$</code>, <code>\(...\)</code>, <code>\[...\]</code></li>
           </ul>
+          <p class="help-section">⊞ Snap layout:</p>
+          <p>Puts this app in the right third and the monitored window (e.g. Claude) in the left two-thirds.</p>
           <p class="help-section">Select Monitoring:</p>
           <p>Choose which apps trigger the viewer (Claude, Gemini, ChatGPT, or custom window-title keywords).</p>
         </div>
@@ -56,6 +61,7 @@
     <span id="timestamp"></span>
   </footer>
 
+  <script src="vendor/katex/katex.min.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

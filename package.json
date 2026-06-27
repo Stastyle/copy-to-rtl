@@ -1,6 +1,6 @@
 {
   "name": "copy-to-rtl",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Clipboard monitor that displays copied text in RTL for Hebrew readability",
   "keywords": [
     "rtl",
@@ -29,5 +29,8 @@
   "devDependencies": {
     "@electron/packager": "^20.0.1",
     "electron": "^35.0.0"
+  },
+  "dependencies": {
+    "katex": "^0.17.0"
   }
 }

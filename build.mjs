@@ -3,8 +3,10 @@
 import { packager } from '@electron/packager';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { readFileSync } from 'node:fs';
 
 const projectDir = dirname(fileURLToPath(import.meta.url));
+const { version } = JSON.parse(readFileSync(join(projectDir, 'package.json'), 'utf8'));
 
 const paths = await packager({
   dir: projectDir,
@@ -13,8 +15,8 @@ const paths = await packager({
   arch: 'x64',
   out: join(projectDir, 'release'),
   overwrite: true,
-  appVersion: '1.0.0',
-  // The app has no runtime dependencies (only Electron/Node built-ins), so
+  appVersion: version,
+  // Runtime assets (KaTeX) are vendored under ./vendor and committed, so
   // node_modules is excluded outright rather than relying on prune.
   prune: false,
   // No asar: foreground-title.ps1 must stay a real on-disk file so the external

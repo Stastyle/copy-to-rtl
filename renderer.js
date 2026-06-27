@@ -4,6 +4,7 @@ const charCount = document.getElementById('charCount');
 const timestamp = document.getElementById('timestamp');
 const alwaysOnTop = document.getElementById('alwaysOnTop');
 const copyBtn = document.getElementById('copyBtn');
+const snapBtn = document.getElementById('snapBtn');
 const clearBtn = document.getElementById('clearBtn');
 const styleBtn = document.getElementById('styleBtn');
 const themeBtn = document.getElementById('themeBtn');
@@ -24,6 +25,57 @@ function escapeHtml(text) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// Math spans are extracted before any markdown parsing and stashed behind
+// placeholder tokens built from Unicode private-use chars (U+E000/U+E001).
+// escapeHtml leaves them untouched, the inline regexes never match them, and
+// they can't be mistaken for a list/header/table — so the rendered KaTeX HTML
+// survives the markdown pass intact and is swapped back in at the very end.
+const MATH_OPEN = '\uE000';
+const MATH_CLOSE = '\uE001';
+
+function renderMath(tex, displayMode, raw) {
+  if (typeof katex === 'undefined') return escapeHtml(raw);
+  try {
+    return katex.renderToString(tex.trim(), {
+      displayMode,
+      throwOnError: false,
+      output: 'htmlAndMathml',
+    });
+  } catch {
+    return escapeHtml(raw);
+  }
+}
+
+function extractMath(text, store) {
+  const stash = (html) => {
+    const token = `${MATH_OPEN}${store.length}${MATH_CLOSE}`;
+    store.push(html);
+    return token;
+  };
+
+  return (
+    text
+      // Display math: $$ ... $$ and \[ ... \] (may span multiple lines).
+      .replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => stash(renderMath(tex, true, m)))
+      .replace(/\\\[([\s\S]+?)\\\]/g, (m, tex) => stash(renderMath(tex, true, m)))
+      // Inline math: \( ... \).
+      .replace(/\\\(([\s\S]+?)\\\)/g, (m, tex) => stash(renderMath(tex, false, m)))
+      // Inline math: $ ... $ on one line. Guards skip escaped \$ and most
+      // currency (no space just inside the delimiters; not a digit run like $5 and $10).
+      .replace(
+        /(?<!\\)\$(?!\s)([^\n$]*?[^\s\\])\$(?!\d)/g,
+        (m, tex) => stash(renderMath(tex, false, m))
+      )
+  );
+}
+
+function restoreMath(html, store) {
+  return html.replace(
+    new RegExp(`${MATH_OPEN}(\\d+)${MATH_CLOSE}`, 'g'),
+    (_, i) => store[Number(i)] ?? ''
+  );
 }
 
 function parseInline(line) {
@@ -93,7 +145,9 @@ function parseHeader(line) {
   return { level: match[1].length, content: match[2] };
 }
 
-function parseMarkdown(text) {
+function parseMarkdown(rawText) {
+  const mathStore = [];
+  const text = extractMath(rawText, mathStore);
   const lines = text.split(/\r?\n/);
   const parts = [];
   let inList = false;
@@ -142,7 +196,7 @@ function parseMarkdown(text) {
   }
 
   closeList();
-  return parts.join('');
+  return restoreMath(parts.join(''), mathStore);
 }
 
 function renderText() {
@@ -240,6 +294,22 @@ copyBtn.addEventListener('click', () => {
     window.rtlApp.copyToClipboard(currentText);
     copyBtn.textContent = '✓';
     setTimeout(() => { copyBtn.textContent = '📋'; }, 1200);
+  }
+});
+
+snapBtn.addEventListener('click', async () => {
+  snapBtn.disabled = true;
+  try {
+    const result = await window.rtlApp.snapLayout();
+    // Brief feedback: ✓ on success, ⚠ if no target window was found.
+    snapBtn.textContent = result && result.movedTarget ? '✓' : '⚠';
+  } catch {
+    snapBtn.textContent = '⚠';
+  } finally {
+    setTimeout(() => {
+      snapBtn.textContent = '⊞';
+      snapBtn.disabled = false;
+    }, 1200);
   }
 });
 

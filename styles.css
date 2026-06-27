@@ -308,6 +308,20 @@ body {
   text-decoration: line-through;
 }
 
+/* KaTeX math is always LTR; isolate it so the RTL container can't reorder it. */
+.text-display .katex {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-size: 1.05em;
+}
+
+.text-display .katex-display {
+  direction: ltr;
+  margin: 0.6em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 .text-display .table-wrap {
   overflow-x: auto;
   margin: 0.6em 0;

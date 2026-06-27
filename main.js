@@ -184,6 +184,75 @@ function getForegroundWindowTitle() {
   });
 }
 
+// Enabled monitored-app keywords (e.g. ['claude', 'anthropic']) used to locate
+// the window to place beside this app when snapping the layout.
+function getEnabledKeywords() {
+  const keywords = [];
+  for (const monitoredApp of getMonitoredApps()) {
+    if (!monitoredApp.enabled) continue;
+    for (const keyword of monitoredApp.keywords || []) {
+      const trimmed = String(keyword).trim();
+      if (trimmed) keywords.push(trimmed);
+    }
+  }
+  return keywords;
+}
+
+// Finds the first visible top-level window whose title contains one of the
+// keywords and moves it to `rect` (physical pixels). Resolves { movedTarget }.
+function moveExternalWindow(keywords, rect) {
+  if (process.platform !== 'win32' || !keywords.length) {
+    return Promise.resolve({ movedTarget: false });
+  }
+
+  return new Promise((resolve) => {
+    const scriptPath = path.join(__dirname, 'snap-window.ps1');
+    execFile(
+      'powershell.exe',
+      [
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath,
+        '-Keywords', keywords.join(','),
+        '-X', String(rect.x), '-Y', String(rect.y),
+        '-W', String(rect.width), '-H', String(rect.height),
+      ],
+      { encoding: 'utf8', timeout: 4000, windowsHide: true },
+      (err, stdout) => resolve({ movedTarget: !err && String(stdout).trim() === 'moved' })
+    );
+  });
+}
+
+// Snaps this window to the right third of its display's work area and moves the
+// first matching monitored window (e.g. Claude) into the left two-thirds.
+function snapLayout() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return Promise.resolve({ movedTarget: false });
+  }
+
+  const display = screen.getDisplayMatching(mainWindow.getBounds());
+  const wa = display.workArea; // DIP
+  const thirdWidth = Math.max(320, Math.round(wa.width / 3));
+  const otherWidth = wa.width - thirdWidth;
+
+  // Self -> right third (Electron uses DIP coordinates).
+  mainWindow.setBounds({
+    x: wa.x + otherWidth,
+    y: wa.y,
+    width: thirdWidth,
+    height: wa.height,
+  });
+  mainWindow.setAlwaysOnTop(true, 'screen-saver');
+
+  // Target -> left two-thirds. Win32 MoveWindow expects physical pixels.
+  const targetPhysical = screen.dipToScreenRect(mainWindow, {
+    x: wa.x,
+    y: wa.y,
+    width: otherWidth,
+    height: wa.height,
+  });
+
+  return moveExternalWindow(getEnabledKeywords(), targetPhysical);
+}
+
 function updateTrayTooltip() {
   if (!tray) return;
   tray.setToolTip(
@@ -348,6 +417,8 @@ ipcMain.handle('copy-to-clipboard', (_event, text) => {
   clipboard.writeText(text);
   lastClipboardText = text;
 });
+
+ipcMain.handle('snap-layout', () => snapLayout());
 
 // Single-instance lock: a second launch focuses the existing window and exits,
 // so there's never more than one tray icon / clipboard poller / window.
