@@ -28,7 +28,8 @@ of the box, and you can add any other app by a keyword from its window title.
 
 ## What it does
 
-<img width="1914" height="1032" alt="image" src="https://github.com/user-attachments/assets/3df83e0e-62fa-4f84-bc24-75e6ff3bbd5d" />
+<img width="1916" height="1030" alt="613996247-582c96f0-81c3-4e94-9fba-0f311910c119" src="https://github.com/user-attachments/assets/962e112b-7d09-460a-b6d0-c9070ac8b7ce" />
+<img width="1914" height="1032" alt="613908819-3df83e0e-62fa-4f84-bc24-75e6ff3bbd5d" src="https://github.com/user-attachments/assets/52739549-64cd-408d-bd62-9257bcf075ac" />
 
 - Shows whatever you copy **right-to-left**, with proper Hebrew layout.
 - Optionally styles common Markdown — `**bold**`/`*bold*`, `_italic_`, `` `code` ``,
