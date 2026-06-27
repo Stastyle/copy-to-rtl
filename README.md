@@ -34,6 +34,13 @@ of the box, and you can add any other app by a keyword from its window title.
 - Optionally styles common Markdown — `**bold**`/`*bold*`, `_italic_`, `` `code` ``,
   `~~strikethrough~~`, `#`/`##`/`###` headings, `-` lists, and `| pipe | tables |` —
   or shows the raw text if you'd rather. Toggle it with the **Style** button.
+- Renders **math** with KaTeX, so formulas copied out of Claude show up as real
+  notation instead of raw LaTeX that fell apart on the way to the clipboard.
+  `$x^2$`, `$$…$$`, `\(…\)` and `\[…\]` all work, fully offline. (Shown when
+  **Style** is on.)
+- **Snaps side by side** in one click (the **⊞** button): this window jumps to the
+  right third of your screen and the app it's watching — Claude, say — fills the
+  left two-thirds. Handy for reading along while you chat.
 - Only reacts to copies from apps you've opted into. Claude is on by default; the
   others are a checkbox away under **Select Monitoring**, and custom apps are matched
   by a window-title keyword you provide.
@@ -73,7 +80,8 @@ The window pops up with your text the right way round. The toolbar has the rest:
 - **Select Monitoring** — pick which apps trigger it, or add your own by keyword.
 - **Always on top** — keep it floating above everything else.
 - **📋** — copy the displayed text back to the clipboard.
-- **Style** — switch between styled Markdown and raw text.
+- **⊞** — snap this window to the right third and the monitored app to the left two-thirds.
+- **Style** — switch between styled Markdown and raw text (also turns on math rendering).
 - **🌙 / ☀️** — dark or light.
 - **Clear** — wipe the view.
 
@@ -100,10 +108,12 @@ Everything's kept out of the app folder, under `%AppData%\copy-to-rtl\`:
 The interesting files: [`main.js`](main.js) is the Electron main process (window, tray,
 clipboard polling, lifecycle); [`renderer.js`](renderer.js) is the viewer UI and the
 Markdown renderer; [`apps-store.js`](apps-store.js) handles the monitored-app list and
-matching; [`foreground-title.ps1`](foreground-title.ps1) reads the active window title;
+matching; [`foreground-title.ps1`](foreground-title.ps1) reads the active window title
+and [`snap-window.ps1`](snap-window.ps1) moves the watched window for the snap layout;
 and [`build.mjs`](build.mjs) packages the executable. The `monitoring-settings.*` files
-are the "Select Monitoring" window, and the `*preload.js` files are the
-context-isolated IPC bridges.
+are the "Select Monitoring" window, the `*preload.js` files are the context-isolated IPC
+bridges, and [`vendor/katex`](vendor/katex) is the bundled math renderer that ships with
+the app so it works offline.
 
 ## License
 
